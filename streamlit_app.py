@@ -45,28 +45,37 @@ if st.button("Run Analysis"):
         except Exception as e:
             st.error(f"Analysis Error: {e}")
 
-# 3. THE PAINTER
+# 3. THE PAINTER (2026 Nano Banana Update)
 if 'vision_text' in st.session_state:
     st.subheader("The AI's Vision")
     st.info(st.session_state['vision_text'])
     
     if st.button("🎨 Paint this Image"):
         try:
+            # Using the new 2026 unified GenAI client
             client = genai.Client(api_key=key)
-            with st.spinner("Imagen 3 is painting your music..."):
-                # Using the stable 2026 Image Model
-                response = client.models.generate_images(
-                    model='imagen-3.0-generate-001',
-                    prompt=st.session_state['vision_text'],
-                    config=types.GenerateImagesConfig(number_of_images=1)
+            
+            with st.spinner("Nano Banana 2 is painting your music..."):
+                # In 2026, image generation is a modality of the main Gemini 3 models
+                response = client.models.generate_content(
+                    model='gemini-3.1-flash-image-preview', # This is Nano Banana 2
+                    contents=f"Generate a high-quality 4K abstract painting based on this description: {st.session_state['vision_text']}",
+                    config=types.GenerateContentConfig(
+                        # We specify we want an IMAGE output specifically
+                        output_mime_type="image/png" 
+                    )
                 )
 
-                if response.generated_images:
-                    img_data = response.generated_images[0].image.image_bytes
-                    image = Image.open(BytesIO(img_data))
-                    st.image(image, caption=f"Visualized at {st.session_state['bpm']} BPM", use_container_width=True)
-                    st.success("Masterpiece Complete!")
+                # Access the generated image from the multimodal response
+                if response.candidates[0].content.parts:
+                    for part in response.candidates[0].content.parts:
+                        if part.inline_data:
+                            img_data = part.inline_data.data
+                            image = Image.open(BytesIO(img_data))
+                            st.image(image, caption="Visualized at 99 BPM", use_container_width=True)
+                            st.success("Masterpiece Complete via Nano Banana 2!")
+                            break
                 
         except Exception as e:
             st.error(f"Painting Error: {e}")
-            st.info("Tip: Check your Google AI Studio to see if 'Imagen' is enabled for your key.")
+            st.info("Tip: If you see a quota error, remember that free tier Nano Banana is limited to a few images per day.")
