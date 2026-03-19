@@ -13,23 +13,30 @@ if st.button("Run Analysis"):
         st.error("Missing Key or Song!")
     else:
         try:
-            with st.spinner("Analyzing your music and calling the AI..."):
-                # 1. Load song
-                y, sr = librosa.load(song)
+            with st.spinner("Analyzing and finding available AI models..."):
+                # 1. Setup API
+                genai.configure(api_key=key)
                 
-                # 2. Get Tempo (Handled for all library versions)
+                # 2. Find a model that works for YOU
+                available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                if not available_models:
+                    st.error("No models found for this API key. Check your Google AI Studio project.")
+                    st.stop()
+                
+                # Use the first one found (usually gemini-pro or gemini-1.5-flash)
+                model_name = available_models[0]
+                model = genai.GenerativeModel(model_name)
+                
+                # 3. Audio Analysis
+                y, sr = librosa.load(song)
                 tempo_data, _ = librosa.beat.beat_track(y=y, sr=sr)
                 tempo = float(tempo_data[0]) if isinstance(tempo_data, (np.ndarray, list)) else float(tempo_data)
                 
-                # 3. Configure AI with the more stable model name
-                genai.configure(api_key=key)
-                model = genai.GenerativeModel('gemini-pro')
-                
-                # 4. Get the Vision
-                prompt = f"The music has a tempo of {int(tempo)} BPM. Describe a beautiful, abstract digital painting that matches this speed. Mention colors and art style."
+                # 4. Generate Vision
+                prompt = f"Describe an abstract painting for a song with {int(tempo)} BPM."
                 response = model.generate_content(prompt)
                 
-                st.success(f"Success! Tempo detected: {int(tempo)} BPM")
+                st.success(f"Using Model: {model_name}")
                 st.subheader("The AI's Vision:")
                 st.write(response.text)
                 
