@@ -1,7 +1,10 @@
 import streamlit as st
 import librosa
 import numpy as np
-import google.generativeai as genai
+from google import genai # Note: This is the new 2026 client
+from google.genai import types
+from PIL import Image
+from io import BytesIO
 
 st.set_page_config(page_title="EchoCanvas", page_icon="🎨")
 st.title("🎵 EchoCanvas")
@@ -13,53 +16,57 @@ song = st.file_uploader("Upload a song (MP3/WAV)", type=["mp3", "wav"])
 if song:
     st.audio(song)
 
-# 2. ANALYSIS
+# 2. ANALYSIS 
 if st.button("Run Analysis"):
     if not key or not song:
         st.error("Missing Key or Song!")
     else:
         try:
-            genai.configure(api_key=key, transport='rest')
-            # Use the model that just worked for you!
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            # We use the new 'genai.Client' for everything now
+            client = genai.Client(api_key=key)
             
-            with st.spinner("Analyzing music..."):
+            with st.spinner("Analyzing music & generating vision..."):
+                # Audio Processing
                 y, sr = librosa.load(song)
                 tempo_data, _ = librosa.beat.beat_track(y=y, sr=sr)
                 tempo = float(tempo_data[0]) if isinstance(tempo_data, (np.ndarray, list)) else float(tempo_data)
                 
+                # Text Generation (using your successful 2.5 Flash model)
                 prompt = f"The music has a tempo of {int(tempo)} BPM. Describe a beautiful abstract painting for it."
-                response = model.generate_content(prompt)
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash', 
+                    contents=prompt
+                )
                 
-                # Store the description so we can use it to paint
                 st.session_state['vision_text'] = response.text
-                st.success(f"99 BPM Detected! Model: Gemini 2.5 Flash")
+                st.session_state['bpm'] = int(tempo)
+                st.success(f"99 BPM Detected!")
 
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Analysis Error: {e}")
 
-# 3. THE PAINTER (The part you've been waiting for!)
+# 3. THE PAINTER
 if 'vision_text' in st.session_state:
     st.subheader("The AI's Vision")
     st.info(st.session_state['vision_text'])
     
     if st.button("🎨 Paint this Image"):
         try:
-            with st.spinner("Imagen 3 is painting... (takes 15 seconds)"):
-                # Calling the specific Image Generation model
-                # Note: Some free keys need 'imagen-3.0-generate-001'
-                paint_model = genai.GenerativeModel("imagen-3.0-generate-001")
-                
-                # We give it the description the AI just wrote
-                result = paint_model.generate_images(
+            client = genai.Client(api_key=key)
+            with st.spinner("Imagen 3 is painting your music..."):
+                # Using the stable 2026 Image Model
+                response = client.models.generate_images(
+                    model='imagen-3.0-generate-001',
                     prompt=st.session_state['vision_text'],
-                    number_of_images=1
+                    config=types.GenerateImagesConfig(number_of_images=1)
                 )
-                
-                if result.images:
-                    st.image(result.images[0], caption="Your Music-Driven Canvas", use_container_width=True)
+
+                if response.generated_images:
+                    img_data = response.generated_images[0].image.image_bytes
+                    image = Image.open(BytesIO(img_data))
+                    st.image(image, caption=f"Visualized at {st.session_state['bpm']} BPM", use_container_width=True)
                     st.success("Masterpiece Complete!")
                 
         except Exception as e:
-            st.warning("Text-to-Image might be restricted on your current API tier.")
-            st.error(f"Details: {e}")
+            st.error(f"Painting Error: {e}")
+            st.info("Tip: Check your Google AI Studio to see if 'Imagen' is enabled for your key.")
