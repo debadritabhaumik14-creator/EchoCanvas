@@ -44,19 +44,21 @@ if st.button("Run Analysis"):
 
         except Exception as e:
             st.error(f"Analysis Error: {e}")
-
-# 3. THE FREE GALLERY MODE
+# 3. THE FREE MASTERPIECE GALLERY
 if 'vision_text' in st.session_state:
     st.subheader("The AI's Vision")
     st.info(st.session_state['vision_text'])
     
     st.write("---")
-    st.write("💡 **To get your image for free:** Copy the text above and paste it into [Google AI Studio](https://aistudio.google.com).")
+    st.markdown("### 🎨 Create Your Painting (Free)")
+    st.write("1. Copy the vision text above.")
+    st.write("2. Paste it into [Google AI Studio](https://aistudio.google.com) (Select 'Gemini 3.1 Flash Image').")
+    st.write("3. Download your art and upload it below:")
+
+    # Let the user upload the free image they made
+    final_art = st.file_uploader("Upload your finished masterpiece:", type=["png", "jpg", "jpeg"])
     
-    # Let the user upload the image they generated for free
-    uploaded_art = st.file_uploader("🎨 Upload your generated masterpiece here to show it in the app:", type=["png", "jpg", "jpeg"])
-    
-    if uploaded_art:
-        st.image(uploaded_art, caption=f"Visualized at {st.session_state.get('bpm', 99)} BPM", use_container_width=True)
+    if final_art:
+        st.image(final_art, caption=f"Visualized at 99 BPM", use_container_width=True)
         st.balloons()
-        st.success("Masterpiece Gallery Updated!")
+        st.success("Masterpiece Saved to Gallery!")
