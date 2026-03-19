@@ -44,21 +44,26 @@ if st.button("Run Analysis"):
 
         except Exception as e:
             st.error(f"Analysis Error: {e}")
-# 3. THE FREE MASTERPIECE GALLERY
+# 3. THE FREE ARTIST WORKFLOW
 if 'vision_text' in st.session_state:
     st.subheader("The AI's Vision")
     st.info(st.session_state['vision_text'])
     
     st.write("---")
-    st.markdown("### 🎨 Create Your Painting (Free)")
-    st.write("1. Copy the vision text above.")
-    st.write("2. Paste it into [Google AI Studio](https://aistudio.google.com) (Select 'Gemini 3.1 Flash Image').")
-    st.write("3. Download your art and upload it below:")
-
-    # Let the user upload the free image they made
-    final_art = st.file_uploader("Upload your finished masterpiece:", type=["png", "jpg", "jpeg"])
+    st.markdown("### 🚀 Generate Your 4K Art for Free")
+    st.write("Google requires a credit card to use the 'Paint' button in apps. To keep it **100% free**, follow this:")
     
+    # A one-click button to copy the prompt
+    st.text_area("Copy this Prompt:", value=st.session_state['vision_text'], height=150)
+    
+    st.markdown("""
+    1.  Go to **[Google AI Studio](https://aistudio.google.com/)**
+    2.  Select **'Gemini 3.1 Flash Image'** in the top right.
+    3.  Paste the text and download your 4K painting!
+    """)
+
+    # Let the user upload their free masterpiece back into the app
+    final_art = st.file_uploader("🖼️ Upload your finished painting to the Gallery:", type=["png", "jpg"])
     if final_art:
-        st.image(final_art, caption=f"Visualized at 99 BPM", use_container_width=True)
+        st.image(final_art, caption=f"EchoCanvas: 99 BPM Vision", use_container_width=True)
         st.balloons()
-        st.success("Masterpiece Saved to Gallery!")
