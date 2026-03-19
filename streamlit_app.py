@@ -45,38 +45,18 @@ if st.button("Run Analysis"):
         except Exception as e:
             st.error(f"Analysis Error: {e}")
 
-# 3. THE PAINTER (2026 Nano Banana 2 Unified Version)
+# 3. THE FREE GALLERY MODE
 if 'vision_text' in st.session_state:
     st.subheader("The AI's Vision")
     st.info(st.session_state['vision_text'])
     
-    if st.button("🎨 Paint this Image"):
-        try:
-            # We use the standard Client you already have
-            client = genai.Client(api_key=key)
-            
-            with st.spinner("Nano Banana 2 is painting your music..."):
-                # 2026 logic: Just ask the image model for content!
-                # Note the model name: 'gemini-3.1-flash-image-preview'
-                response = client.models.generate_content(
-                    model='gemini-3.1-flash-image-preview', 
-                    contents=f"Create a 4K abstract painting based on this description: {st.session_state['vision_text']}"
-                )
-
-                # Find the image in the response parts
-                found_image = False
-                for part in response.candidates[0].content.parts:
-                    if part.inline_data:
-                        img_data = part.inline_data.data
-                        image = Image.open(BytesIO(img_data))
-                        st.image(image, caption=f"Visualized at {st.session_state.get('bpm', 99)} BPM", use_container_width=True)
-                        st.success("Masterpiece Complete via Nano Banana 2!")
-                        found_image = True
-                        break
-                
-                if not found_image:
-                    st.warning("The AI described a painting but didn't 'draw' it. Try clicking again!")
-                
-        except Exception as e:
-            st.error(f"Painting Error: {e}")
-            st.info("Tip: Double-check your API Key in Google AI Studio. Make sure 'Gemini 3.1 Flash Image' is in your model list.")
+    st.write("---")
+    st.write("💡 **To get your image for free:** Copy the text above and paste it into [Google AI Studio](https://aistudio.google.com).")
+    
+    # Let the user upload the image they generated for free
+    uploaded_art = st.file_uploader("🎨 Upload your generated masterpiece here to show it in the app:", type=["png", "jpg", "jpeg"])
+    
+    if uploaded_art:
+        st.image(uploaded_art, caption=f"Visualized at {st.session_state.get('bpm', 99)} BPM", use_container_width=True)
+        st.balloons()
+        st.success("Masterpiece Gallery Updated!")
